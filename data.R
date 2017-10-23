@@ -24,25 +24,37 @@ get.linearY<-function(X, n, beta)
     return(as.vector(Y))
 }
 
-# helper function to calculate MSE of beta
-mse = function(beta,bhat) {
-    sum((beta-bhat)^2)
+scale.X = function(X) {
+    mns = colMeans(X)
+    std = sqrt(colMeans(X^2) - mns^2)
+    res = t((t(X) - mns)/std)
+    return(res)
 }
 
 # Data generation
 set.seed(1024)
 
 n = 100
-p = 1000
+p = 3000
 beta = c(3, 1.5, 0, 0, 2, rep(0, p-5))
 X = get.ARX(n, p)
+X = scale.X(X)
 Y = get.linearY(X, n, beta)
 
-# Select lambda with HBIC
-res = HBIC(X, Y, c(3,3.5,4,4.5,5))
-ind = which.min(res[[2]])
-bhat_best = res[[1]][[ind]]
+# Select lambda with HBIC for cccp, 2013
+res = HBIC(X, Y, c(1,2,3,4,5), method="cccp")
+ind = which.min(res$hbic.val)
+bhat_best = res$bhat[[ind]]
 mse(beta, bhat_best)
 
-# Calculate MSE with different lambda settings
-res2 = MSE(X, Y, c(1,2,3,4,5), beta)
+# Select lambda with HBIC for ncv, 2011
+res = HBIC(X, Y, c(1,2,3,4,5,6), method="ncv")
+ind = which.min(res$hbic.val)
+bhat_best = res$bhat[[ind]]
+mse(beta, bhat_best)
+
+# Select lambda with cross validation for vanilla lasso
+res = lasso.cv(X, Y, c(0, 0.1, 0.2, 0.3, 0.4, 0.8), 5, seed = 1024)
+ind = which.min(res$rmse)
+bhat_lasso = lasso.cd(X, Y, res$lambda[ind])
+mse(beta, bhat_lasso)
