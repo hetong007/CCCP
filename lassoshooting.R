@@ -182,7 +182,7 @@ hbic.calc = function(x, y, lambda, beta) {
 }
 
 # helper function to calculate MSE of beta
-mse = function(beta,bhat) {
+mse = function(beta, bhat) {
     sum((beta-bhat)^2)
 }
 
