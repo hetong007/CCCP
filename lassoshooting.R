@@ -194,7 +194,7 @@ false.pos = function(beta, bhat) {
     sum((bhat != 0) * (beta == 0))
 }
 
-HBIC = function(x, y, lambda.vec, method = "cccp",
+HBIC = function(x, y, lambda.vec, method = "cccp", beta,
                 max.step = 10000, thred = 0.001, verbose = FALSE) {
     len = length(lambda.vec)
     
@@ -255,13 +255,18 @@ cv.cutfold = function(n, k) {
         i = i+1
         L = L + 1
     }
+    
     return(res)
 }
 
-lasso.cv = function(X, Y, lambda.vec, nfold = 5, seed = NULL) {
+lasso.cv = function(X, Y, lambda.vec, beta, nfold = 5, seed = NULL) {
     m = length(lambda.vec)
     n = nrow(X)
     rmse.val = rep(0, m)
+    mse.val = rep(0, m)
+    bhat.list = list()
+    tp.val = rep(0, m)
+    fp.val = rep(0, m)
     
     if (!is.null(seed))
         set.seed(seed)
@@ -280,8 +285,16 @@ lasso.cv = function(X, Y, lambda.vec, nfold = 5, seed = NULL) {
             # browser()
             rmse.vec[k] = rmse(X[test,] %*% bhat, Y[test])
         }
+        bhat = lasso.cd(X, Y, lambda)
         rmse.val[i] = mean(rmse.vec)
-        cat(rmse.val[i], '\n')
+        mse.val[i] = mse(beta, bhat)
+        bhat.list[[i]] = bhat
+        tp.val[i] = true.pos(beta, bhat)
+        fp.val[i] = false.pos(beta, bhat)
+        
+        cat(mse.val[i], '\t', rmse.val[i], '\n')
     }
-    return(list(rmse = rmse.val, lambda = lambda.vec))
+    
+    return(list(bhat = bhat.list, rmse = rmse.val, mse = mse.val, lambda = lambda.vec,
+                tp.val = tp.val, fp.val = fp.val))
 }
