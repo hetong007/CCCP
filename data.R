@@ -36,15 +36,15 @@ colnames(cccp.res) = c("Lambda.hbic","HBIC.hbic","MSE.hbic","TP.hbic","FP.hbic",
                        "Lambda.mse","HBIC.mse","MSE.mse","TP.mse","FP.mse")
 ncv.res = cccp.res
 lasso.res = cccp.res
-colnames(lasso.res) = c("Lambda.rmse","HBIC.rmse","MSE.rmse","TP.rmse","FP.rmse",
-                        "Lambda.mse","HBIC.mse","MSE.mse","TP.mse","FP.mse")
+colnames(lasso.res) = c("Lambda.rmse","RMSE.rmse","MSE.rmse","TP.rmse","FP.rmse",
+                        "Lambda.mse","RMSE.mse","MSE.mse","TP.mse","FP.mse")
 
 
 lambda.vec.cccp = c(0, 0.1, 0.2, 0.3, 0.4, 0.8, 1,2,3,4,5)
 lambda.vec.ncv = c(0, 0.1, 0.2, 0.3, 0.4, 0.8, 1,2,3,4,5)
 lambda.vec.lasso = c(0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2)
 
-for (i in 1:10) {
+for (i in 1:100) {
     # Data generation
     cat('Dataset No.', i, '\n')
     set.seed(i)
@@ -90,13 +90,21 @@ for (i in 1:10) {
                       res_lasso$tp.val[ind_rmse], res_lasso$fp.val[ind_rmse])
 }
 
-simulation.res.10 = list(CCCP = cccp.res[1:10,],
-                         NCV = ncv.res[1:10,],
-                         Lasso = lasso.res[1:10,])
+save(cccp.res, ncv.res, lasso.res, file = 'simulation.100.rda')
 
-save(simulation.res.10, file = 'simulation.10.rda')
+## Summarize results
+result = matrix(0, 3, 4)
+result[1,] = colMeans(cccp.res[,2:5])
+result[2,] = colMeans(ncv.res[,2:5])
+result[3,] = colMeans(lasso.res[,2:5])
+colnames(result) = c("HBIC/RMSE", "MSE.bhat", "TP", "FP")
+rownames(result) = c("CCCP", "NCV", "Lasso")
 
-# simulation.res.100 = list(CCCP = cccp.res,
-#                          NCV = ncv.res,
-#                          Lasso = lasso.res)
-# save(simulation.res.100, file = 'simulation.100.rda')
+result.mse = matrix(0, 3, 4)
+result.mse[1,] = colMeans(cccp.res[,7:10])
+result.mse[2,] = colMeans(ncv.res[,7:10])
+result.mse[3,] = colMeans(lasso.res[,7:10])
+colnames(result.mse) = c("HBIC/RMSE", "MSE.bhat", "TP", "FP")
+rownames(result.mse) = c("CCCP", "NCV", "Lasso")
+
+save(result, result.mse, file = 'summarized.ressult.rda')
